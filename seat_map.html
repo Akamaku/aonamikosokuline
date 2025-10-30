@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ライナー予約システム</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<h1>🚄 ライナー MARS システム</h1>
+
+{% if mode == "select_direction" %}
+  <h2>方向を選択してください</h2>
+  <a class="btn" href="{{ url_for('down_list') }}">⬇ 下り（青波中央 → 茶志内）</a>
+  <a class="btn" href="{{ url_for('up_list') }}">⬆ 上り（茶志内 → 青波中央）</a>
+
+{% elif mode == "select_train" %}
+  <h2>{{ direction }} のライナーを選択</h2>
+  {% for train in trains %}
+    <p><a class="train" href="{{ url_for('select_car', train_id=train[0]) }}">{{ train[1] }}</a></p>
+  {% endfor %}
+
+{% elif mode == "select_car" %}
+  <h2>号車を選択</h2>
+  {% for c in cars %}
+    <a class="btn" href="{{ url_for('car_view', train_id=selected_train, car_number=c) }}">{{ c }}号車</a>
+  {% endfor %}
+
+{% elif mode == "car_view" %}
+  <h2>{{ car_number }}号車 座席表</h2>
+  <div class="grid">
+    {% for row, cols in seat_map.items() %}
+      <div class="row">
+        {% for col, val in cols.items() %}
+          <span class="seat {{ 'taken' if val == '×' else 'free' }}">{{ row }}{{ col }}{{ val }}</span>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <form method="POST">
+    <h3>予約／キャンセル操作</h3>
+    <input type="text" name="name" placeholder="お名前" required>
+    <input type="text" name="seat_number" placeholder="座席例: 3A" required>
+    <select name="from_station">
+      {% for s in STATIONS %}<option>{{ s }}</option>{% endfor %}
+    </select>
+    <select name="to_station">
+      {% for s in STATIONS %}<option>{{ s }}</option>{% endfor %}
+    </select>
+    <button type="submit" name="action" value="reserve">予約</button>
+    <button type="submit" name="action" value="cancel">キャンセル</button>
+  </form>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <p class="{{ category }}">{{ message }}</p>
+    {% endfor %}
+  {% endwith %}
+
+{% elif mode == "admin_view" %}
+  <h2>🚉 全列車予約一覧</h2>
+  <p><a class="btn" href="{{ url_for('export_csv') }}">💾 CSVダウンロード</a></p>
+  <table>
+    <tr><th>列車</th><th>号車</th><th>座席</th><th>乗車駅</th><th>降車駅</th><th>予約者</th><th>状態</th></tr>
+    {% for r in reservations %}
+      <tr>
+        <td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td><td>{{ r[4] }}</td><td>{{ r[5] }}</td><td>{{ r[3] }}</td>
+        <td>{{ '✅' if r[6]=='reserved' else '❌' }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+</body>
+</html>
