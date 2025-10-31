@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ライナー時刻表</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="left">
+    <a class="homebtn" href="/">🏠 ホーム</a>
+    <a class="homebtn active" href="/timetable">🕒 時刻表</a>
+    <a class="homebtn" href="/admin">📋 管理</a>
+  </div>
+  <div class="right">
+    <span>ライナー 時刻表</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="tabs">
+    <a class="tab-btn tab-down active" onclick="showTab('down')">⬇ 下り（青波中央→茶志内）</a>
+    <a class="tab-btn tab-up" onclick="showTab('up')">⬆ 上り（茶志内→青波中央）</a>
+  </div>
+
+  <!-- 下り -->
+  <section id="tab-down" class="tab-panel">
+    <h1>⬇ 下り（青波中央→茶志内）</h1>
+    <div class="tablewrap scrollx">
+      <table class="timetable">
+        <tr>
+          <th>列車</th>
+          {% for st in down_stations %}
+            <th>{{ st }}</th>
+          {% endfor %}
+        </tr>
+        {% for svc in down_services %}
+        <tr>
+          <td>{{ svc.train_code }}</td>
+          {% for st in down_stations %}
+            <td>
+              {{ svc.stops.get(st, "ー") }}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+
+  <!-- 上り -->
+  <section id="tab-up" class="tab-panel hidden">
+    <h1>⬆ 上り（茶志内→青波中央）</h1>
+    <div class="tablewrap scrollx">
+      <table class="timetable">
+        <tr>
+          <th>列車</th>
+          {% for st in up_stations %}
+            <th>{{ st }}</th>
+          {% endfor %}
+        </tr>
+        {% for svc in up_services %}
+        <tr>
+          <td>{{ svc.train_code }}</td>
+          {% for st in up_stations %}
+            <td>
+              {{ svc.stops.get(st, "ー") }}
+            </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+function showTab(which) {
+  const downPanel = document.getElementById('tab-down');
+  const upPanel = document.getElementById('tab-up');
+
+  const downBtn = document.querySelector('.tab-down');
+  const upBtn = document.querySelector('.tab-up');
+
+  if (which === 'down') {
+    downPanel.classList.remove('hidden');
+    upPanel.classList.add('hidden');
+    downBtn.classList.add('active');
+    upBtn.classList.remove('active');
+  } else {
+    upPanel.classList.remove('hidden');
+    downPanel.classList.add('hidden');
+    upBtn.classList.add('active');
+    downBtn.classList.remove('active');
+  }
+}
+</script>
+
+</body>
+</html>

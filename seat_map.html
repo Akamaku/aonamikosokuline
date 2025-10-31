@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ライナー予約システム</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="left">
+    <a class="homebtn" href="/">🏠 ホーム</a>
+    <a class="homebtn" href="/timetable">🕒 時刻表</a>
+    <a class="homebtn" href="/admin">📋 管理</a>
+  </div>
+  <div class="right">
+    <span>ライナー MARS システム</span>
+  </div>
+</header>
+
+<main class="container">
+
+{% if mode == "select_direction" %}
+  <h1>方向を選択してください</h1>
+  <a class="btn" href="{{ url_for('down_list') }}">⬇ 下り（青波中央 → 茶志内）</a>
+  <a class="btn" href="{{ url_for('up_list') }}">⬆ 上り（茶志内 → 青波中央）</a>
+
+{% elif mode == "select_train" %}
+  <h1>{{ direction }} のライナーを選択</h1>
+  {% for train in trains %}
+    <p><a class="train btn" href="{{ url_for('select_car', train_id=train[0]) }}">{{ train[1] }}</a></p>
+  {% endfor %}
+
+{% elif mode == "select_car" %}
+  <h1>号車を選んでください</h1>
+  {% for c in cars %}
+    <a class="btn" href="{{ url_for('car_view', train_id=selected_train, car_number=c) }}">{{ c }}号車</a>
+  {% endfor %}
+
+{% elif mode == "car_view" %}
+  <h1>{{ car_number }}号車 座席表</h1>
+  <div class="grid">
+    {% for row, cols in seat_map.items() %}
+      <div class="row">
+        {% for col, val in cols.items() %}
+          <span class="seat {{ 'taken' if val == '×' else 'free' }}">{{ row }}{{ col }}{{ val }}</span>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <section class="panel">
+    <h2>予約／キャンセル</h2>
+    <form method="POST">
+      <div class="field">
+        <label>お名前</label>
+        <input type="text" name="name" placeholder="山田太郎" required>
+      </div>
+
+      <div class="field">
+        <label>座席番号</label>
+        <input type="text" name="seat_number" placeholder="例: 3A" required>
+      </div>
+
+      <div class="field">
+        <label>乗車駅</label>
+        <select name="from_station">
+          {% for s in STATIONS %}
+            <option>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>降車駅</label>
+        <select name="to_station">
+          {% for s in STATIONS %}
+            <option>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit" name="action" value="reserve">🎫 予約する</button>
+        <button type="submit" name="action" value="cancel" class="danger">❌ キャンセル</button>
+      </div>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="{{ category }}">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+  </section>
+
+{% elif mode == "admin_view" %}
+  <h1>全列車 予約一覧</h1>
+  <p><a class="btn" href="{{ url_for('export_csv') }}">💾 CSVダウンロード</a></p>
+
+  <div class="tablewrap">
+    <table>
+      <tr>
+        <th>列車</th>
+        <th>号車</th>
+        <th>座席</th>
+        <th>乗車駅</th>
+        <th>降車駅</th>
+        <th>予約者</th>
+        <th>状態</th>
+      </tr>
+      {% for r in reservations %}
+        <tr>
+          <td>{{ r[0] }}</td>
+          <td>{{ r[1] }}</td>
+          <td>{{ r[2] }}</td>
+          <td>{{ r[4] }}</td>
+          <td>{{ r[5] }}</td>
+          <td>{{ r[3] }}</td>
+          <td>{{ '✅' if r[6]=='reserved' else '❌' }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+{% endif %}
+
+</main>
+
+</body>
+</html>
